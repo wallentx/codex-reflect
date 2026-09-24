@@ -1,5 +1,9 @@
 # claude-reflect
 
+> **Codex fork:** install and use the Codex marketplace plugin with the
+> [Codex guide](CODEX.md). `dev` contains the port; `main` is reserved for upstream
+> synchronization. The original Claude documentation follows.
+
 [![GitHub stars](https://img.shields.io/github/stars/BayramAnnakov/claude-reflect?style=flat-square)](https://github.com/BayramAnnakov/claude-reflect/stargazers)
 [![Version](https://img.shields.io/badge/version-3.2.0-blue?style=flat-square)](https://github.com/BayramAnnakov/claude-reflect/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](https://opensource.org/licenses/MIT)

@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/scripts/reflect.py\" hook SessionStart", "timeout": 5}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/scripts/reflect.py\" hook UserPromptSubmit", "timeout": 5}]}],
+    "PreCompact": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/scripts/reflect.py\" hook PreCompact", "timeout": 5}]}],
+    "PostToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/scripts/reflect.py\" hook PostToolUse", "timeout": 5}]}]
+  }
+}

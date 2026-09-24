@@ -1,0 +1,27 @@
+{
+  "name": "codex-reflect",
+  "description": "Capture corrections, review learning proposals, and discover reusable Codex skills.",
+  "author": {
+    "name": "wallentx; upstream by Bayram Annakov"
+  },
+  "repository": "https://github.com/wallentx/codex-reflect",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Reflect",
+    "shortDescription": "Learn from corrections with reviewed proposals",
+    "longDescription": "Capture corrections, scan Codex history, review and organize AGENTS.md guidance, and discover reusable skills with explicit approval.",
+    "developerName": "wallentx",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Review my queued learnings",
+      "Discover reusable skills from recent sessions",
+      "Check my guidance for duplicates"
+    ]
+  },
+  "version": "3.2.0+codex.c9c121fab3d0"
+}

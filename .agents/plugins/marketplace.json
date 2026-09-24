@@ -1,0 +1,12 @@
+{
+  "name": "codex-reflect-marketplace",
+  "interface": {"displayName": "Codex Reflect"},
+  "plugins": [
+    {
+      "name": "codex-reflect",
+      "source": {"source": "local", "path": "./plugins/codex-reflect"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Productivity"
+    }
+  ]
+}
