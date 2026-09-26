@@ -1,10 +1,15 @@
 {
-  "name": "claude-reflect-marketplace",
-  "description": "Official marketplace for claude-reflect, a self-learning plugin for Claude Code",
+  "name": "reflect-marketplace",
+  "description": "LLM Reflect: reviewed learning workflows and the original Claude plugin",
   "owner": {
-    "name": "Bayram Annakov"
+    "name": "wallentx; upstream by Bayram Annakov"
   },
   "plugins": [
+    {
+      "name": "reflect",
+      "source": "./plugins/claude-reflect",
+      "description": "Provider-aware correction capture and independently reviewed learning proposals"
+    },
     {
       "name": "claude-reflect",
       "source": "./",

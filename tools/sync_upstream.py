@@ -60,12 +60,14 @@ def main():
               " No reset, commit, or push was performed.", file=sys.stderr)
         return result.returncode
     run(sys.executable, "tools/build_codex.py")
+    run(sys.executable, "tools/build_providers.py")
     new_inputs = json.loads(old_inputs_path.read_text())
     changed = sorted(p for p in old_inputs.keys() | new_inputs.keys() if old_inputs.get(p) != new_inputs.get(p))
     if changed:
         print("Upstream inputs changed; review native parity for:\n" + "\n".join(changed))
     run(sys.executable, "-m", "pytest", "tests", "-q")
     run(sys.executable, "tools/build_codex.py", "--check")
+    run(sys.executable, "tools/build_providers.py", "--check")
     print("Validated. Review git diff HEAD, stage generated files, and commit when ready. No push performed.")
     return 0
 

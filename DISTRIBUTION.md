@@ -1,4 +1,9 @@
-# Distribution Strategy for claude-reflect
+# Historical upstream distribution notes
+
+These notes describe the original `claude-reflect` distribution effort. For the
+current `wallentx/llm-reflect` project, use [README.md](README.md) and
+[the provider installation guide](PROVIDERS.md). The submissions and upstream
+links below are retained as historical context.
 
 This document outlines submission materials for maximizing plugin distribution across Claude Code plugin marketplaces and awesome-lists.
 

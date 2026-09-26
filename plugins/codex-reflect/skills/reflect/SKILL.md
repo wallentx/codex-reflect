@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Review captured corrections, scan Codex history, and propose reviewed updates to AGENTS.md or skills. Use for reflecting on learnings, historical scans, memory deduplication, or guidance organization.
+description: Review captured corrections, scan provider history, and propose reviewed updates to AGENTS.md or skills. Use for reflecting on learnings, historical scans, memory deduplication, or guidance organization.
 ---
 
 # Reflect
@@ -14,7 +14,8 @@ user-approval gates for every persistent learning change.
 | Argument | Behavior |
 |---|---|
 | `--dry-run` | Read-only preview; no writes or approval prompts |
-| `--scan-history` | Scan this project's Codex history; default 30 days |
+| `--scan-history` | Scan this project's supported history; default 30 days |
+| `--history FILE` | Read an explicitly supplied normalized JSONL export |
 | `--days N` | History window in days, positive integer |
 | `--targets` | Run `targets`, explain active/overridden targets, and exit |
 | `--review` | Run `queue`, show confidence, age, decay, and stale flags; exit |
@@ -23,17 +24,19 @@ user-approval gates for every persistent learning change.
 | `--include-tool-errors` | Include repeated technical errors; implied by history scan |
 | `--model MODEL` | Use explicit `--semantic --model MODEL` analysis in the helper |
 
-Absent `--model`, perform semantic analysis in this Codex conversation. Do not
-substitute Claude model names or invoke `claude`. Scores prioritize review;
+Absent `--model`, perform semantic analysis in the current provider conversation. The helper supports `--model` only for
+Codex; on other providers explain that limitation and keep analysis in-session. Scores prioritize review;
 they are not proof. Decay flags pending items only and never deletes guidance.
 
 ## Process
 
-1. Resolve the script and current project as described in the shared workflow.
+1. Resolve the script, provider binding, and current project as described in the shared workflow.
+   Read `paths` to check capabilities before attempting a native history scan.
    Run `queue --project <project>` and `targets --project <project>`. When the
    queue and audit are empty, offer a first-run history scan; do not silently
    scan other projects. An empty queue does not justify inventing a learning.
-2. For `--scan-history`, run `scan --project <project> --days N
+2. For `--scan-history`, use `--history FILE` when an export was supplied; otherwise
+   verify native history support. Run `scan --project <project> --days N
    --include-tool-errors`. Inspect all returned user messages semantically,
    including non-English corrections that the English regex misses. Do not use
    `--corrections-only` for this scan. For `--include-tool-errors` alone, run the

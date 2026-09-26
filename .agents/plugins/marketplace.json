@@ -1,6 +1,6 @@
 {
   "name": "codex-reflect-marketplace",
-  "interface": {"displayName": "Codex Reflect"},
+  "interface": {"displayName": "LLM Reflect"},
   "plugins": [
     {
       "name": "codex-reflect",

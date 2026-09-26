@@ -26,5 +26,7 @@ jobs:
       - run: python -m pip install pytest
       - name: Check generated plugin
         run: python tools/build_codex.py --check
+      - name: Check generated Claude adapter
+        run: python tools/build_providers.py --check
       - name: Test upstream and Codex adapters
         run: python -m pytest tests -q

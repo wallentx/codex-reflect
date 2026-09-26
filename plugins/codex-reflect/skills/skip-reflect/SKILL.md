@@ -1,6 +1,6 @@
 ---
 name: skip-reflect
-description: Discard the current project's pending Codex Reflect queue when the user explicitly requests skipping queued learnings.
+description: Discard the current project's pending Reflect queue when the user explicitly requests skipping queued learnings.
 ---
 
 # Discard pending learnings

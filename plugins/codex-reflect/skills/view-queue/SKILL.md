@@ -1,6 +1,6 @@
 ---
 name: view-queue
-description: Show pending Codex Reflect learnings with confidence and stale status without applying or deleting anything.
+description: Show pending Reflect learnings with confidence and stale status without applying or deleting anything.
 ---
 
 # View pending learnings

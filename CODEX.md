@@ -1,4 +1,7 @@
-# Codex Reflect
+# LLM Reflect for Codex
+
+For the standalone installer and other coding agents, see [provider support](PROVIDERS.md).
+The Codex marketplace commands and existing queues remain compatible.
 
 A Codex marketplace plugin for correction capture, reviewed learning proposals,
 history analysis, and reusable skill discovery. Based on
@@ -24,7 +27,7 @@ codex plugin add codex-reflect@codex-reflect-marketplace
 After the port is published to the fork's `dev` branch, the Git source is:
 
 ```bash
-codex plugin marketplace add wallentx/codex-reflect --ref dev
+codex plugin marketplace add wallentx/llm-reflect --ref dev
 codex plugin add codex-reflect@codex-reflect-marketplace
 ```
 
@@ -146,13 +149,16 @@ helper lists changed upstream inputs to make this visible.
 
 ```bash
 python3 tools/build_codex.py
+python3 tools/build_providers.py
 python3 -m pytest tests -q
 python3 tools/build_codex.py --check
+python3 tools/build_providers.py --check
 git diff HEAD
 ```
 
-The original [README](README.md), commands, hooks, scripts, and release files
-remain the Claude implementation. See the native
+The original commands, hooks, scripts, and root plugin manifest remain the
+upstream Claude implementation. The [README](README.md) describes LLM Reflect's
+shared runtime and provider adapters. See the native
 [reflect skill](codex_port/skills/reflect/SKILL.md) for Codex behavior.
 
 ## Runtime references

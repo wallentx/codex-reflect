@@ -1,4 +1,4 @@
-"""Codex storage and transcript adapters; upstream owns language detection."""
+"""Shared storage and transcript analysis; upstream owns language detection."""
 from collections import deque
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -12,6 +12,7 @@ import time
 import uuid
 
 from vendor import reflect_utils as upstream
+import providers
 
 
 def codex_home():
@@ -19,7 +20,12 @@ def codex_home():
 
 
 def state_home():
-    return Path(os.environ.get("CODEX_REFLECT_HOME", str(codex_home() / "reflect"))).expanduser().resolve()
+    if "REFLECT_HOME" in os.environ:
+        return Path(os.environ["REFLECT_HOME"]).expanduser().resolve() / providers.current()
+    if providers.current() == "codex":
+        return Path(os.environ.get("CODEX_REFLECT_HOME", str(codex_home() / "reflect"))).expanduser().resolve()
+    base = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state")))
+    return base.expanduser().resolve() / "reflect" / providers.current()
 
 
 def project_path(project=None):
@@ -154,7 +160,7 @@ def capture(prompt, project, session_id="", turn_id=""):
                                       str(project_path(project)))
     identity = "\0".join((session_id, turn_id, safe)) if turn_id else uuid.uuid4().hex
     item.update(id=hashlib.sha256(identity.encode()).hexdigest()[:24],
-                session_id=session_id, turn_id=turn_id)
+                session_id=session_id, turn_id=turn_id, provider=providers.current())
     with queue_lock(project):
         items = load_queue(project)
         if any(i["id"] == item["id"] for i in items):
@@ -186,6 +192,9 @@ def session_metadata(path):
 
 
 def session_files(project=None, all_projects=False, days=None):
+    if providers.current() != "codex":
+        from history import native_session_files
+        return native_session_files(project, all_projects, days)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days) if days is not None else None
     result = []
     for directory in (codex_home() / "sessions", codex_home() / "archived_sessions"):
@@ -257,6 +266,10 @@ def exit_code(value):
 
 def session_records(path, days=None):
     """Normalize public user text and function outputs; never treat assistant text as corrections."""
+    if providers.current() != "codex":
+        from history import claude_records
+        yield from claude_records(path, days)
+        return
     has_events = any(r.get("type") == "event_msg" and isinstance(r.get("payload"), dict)
                      and r["payload"].get("type") == "user_message" for r in jsonl(path))
     meta = session_metadata(path)
@@ -302,11 +315,19 @@ def session_records(path, days=None):
                    "record": index, "skill": skill}
 
 
-def scan(project=None, all_projects=False, days=30, corrections_only=False, include_tool_errors=False):
+def scan(project=None, all_projects=False, days=30, corrections_only=False, include_tool_errors=False,
+         history_files=None):
     rows = []
     seen = set()
-    for path in session_files(project, all_projects, days):
-        for row in session_records(path, days):
+    if history_files:
+        from history import imported_records
+        sources = ((path, imported_records(path, days)) for path in history_files)
+    else:
+        if providers.PROVIDERS[providers.current()]["history"] == "import":
+            raise ValueError("Native history is unavailable for this provider; use --history FILE (normalized JSONL), or review queue.")
+        sources = ((path, session_records(path, days)) for path in session_files(project, all_projects, days))
+    for path, records in sources:
+        for row in records:
             if not all_projects and project_path(row["project"]) != project_path(project):
                 continue
             identity = (row["session_id"], row["record"], row["kind"])
@@ -327,18 +348,22 @@ def scan(project=None, all_projects=False, days=30, corrections_only=False, incl
                     continue
             elif corrections_only and not kind and row["kind"] != "rejection":
                 continue
-            row.update(type=kind, patterns=patterns, confidence=confidence,
+            row.update(provider=providers.current(), type=kind, patterns=patterns, confidence=confidence,
                        sentiment=sentiment, decay_days=decay)
             rows.append(row)
     return rows
 
 
 def targets(project=None, max_depth=3, max_nodes=100):
-    """Discover actual Codex guidance and skills, plus bounded referenced Markdown."""
+    """Discover provider guidance and skills, plus bounded referenced Markdown."""
     root = project_path(project)
-    home = codex_home()
+    home = providers.provider_home()
+    name = providers.current()
+    spec = providers.PROVIDERS[name]
     global_skills = Path.home() / ".agents/skills"
-    allowed = [root, home, global_skills.resolve()]
+    allowed = [root, home, global_skills.resolve(), providers.skill_home()]
+    if name == "antigravity":
+        allowed.append((Path.home() / ".gemini").resolve())
     found, seen = [], set()
 
     def add(path, kind, active=True, **extra):
@@ -352,22 +377,44 @@ def targets(project=None, max_depth=3, max_nodes=100):
 
     def guidance(directory, kind):
         override = directory / "AGENTS.override.md"
-        normal = directory / "AGENTS.md"
-        if override.is_file():
+        normal = directory / spec["instructions"]
+        has_override = name == "codex" and override.is_file()
+        if has_override:
             add(override, kind)
         if normal.is_file() or kind in ("global", "root"):
-            add(normal, kind, active=not override.is_file())
+            add(normal, kind, active=not has_override)
 
-    guidance(home, "global")
+    # Cursor's user rules live in its UI, not ~/.cursor/AGENTS.md.
+    if name == "copilot":
+        add(home / "copilot-instructions.md", "global")
+    elif name != "cursor":
+        guidance(Path.home() / ".gemini" if name == "antigravity" else home, "global")
     guidance(root, "root")
-    excluded = upstream.EXCLUDED_DIRS | {".codex", ".claude", ".agents"}
+    excluded = upstream.EXCLUDED_DIRS | {".codex", ".claude", ".agents", ".cursor", ".gemini", ".opencode", ".github", ".agent"}
     for directory, dirs, _ in os.walk(root):
         dirs[:] = sorted(d for d in dirs if d not in excluded and not (Path(directory) / d).is_symlink())
         if Path(directory) != root:
             guidance(Path(directory), "subdirectory")
-    for directory in (root / ".agents/skills", root / ".codex/skills", global_skills, home / "skills"):
+    directories = [root / spec["project_skills"], providers.skill_home()]
+    if name in ("codex", "cursor", "gemini", "opencode", "copilot"):
+        directories.extend((root / ".agents/skills", global_skills))
+    if name == "codex":
+        directories.append(root / ".codex/skills")
+    for directory in directories:
         for path in sorted(directory.glob("*/SKILL.md")):
             add(path, "skill")
+    if name in ("claude", "cursor"):
+        for directory in (root / ("." + name) / "rules", home / "rules"):
+            for pattern in ("*.md", "*.mdc"):
+                for path in sorted(directory.rglob(pattern)):
+                    add(path, "rule")
+    if name == "claude":
+        add(root / "CLAUDE.local.md", "local")
+    if name == "copilot":
+        add(root / ".github/copilot-instructions.md", "root")
+        for directory in (root / ".github/instructions", home / "instructions"):
+            for path in sorted(directory.rglob("*.instructions.md")):
+                add(path, "rule")
     for path in sorted((project_state(project) / "staging").glob("*.md")):
         # Staging is not automatically loaded as instructions by Codex.
         if state_home() not in allowed:

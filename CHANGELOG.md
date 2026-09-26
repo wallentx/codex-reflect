@@ -1,6 +1,8 @@
 # Changelog
 
-All notable changes to claude-reflect will be documented in this file.
+The release entries below describe upstream `claude-reflect`. LLM Reflect is
+maintained at `wallentx/llm-reflect`; its current multi-provider behavior and
+installation are documented in [README.md](README.md).
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
